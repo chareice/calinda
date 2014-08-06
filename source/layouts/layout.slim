@@ -1,0 +1,12 @@
+doctype html
+html
+  head
+    title = site_config[:title]
+    == partial 'partial/header'
+  body
+    == partial 'partial/describe'
+    #container
+      == partial 'partial/links'
+      .content
+        == yield
+    == partial 'partial/footer'

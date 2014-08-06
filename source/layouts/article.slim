@@ -1,0 +1,18 @@
+doctype html
+html
+  head
+    title = "#{current_article.title} - #{site_config[:title]}"
+    == partial 'partial/header'
+
+  body
+    == partial 'partial/describe'
+    #container
+      == partial 'partial/links'
+      .content
+        section.post
+          h1
+            .date = current_article.date.strftime("%Y-%m-%d")
+            = current_article.title
+          == yield
+      == partial 'partial/disqus'
+    == partial 'partial/footer'
