@@ -18,3 +18,4 @@ gem "tzinfo-data", platforms: [:mswin, :mingw]
 
 gem "bourbon", :require => false
 gem "middleman-minify-html"
+gem 'middleman-gh-pages'
