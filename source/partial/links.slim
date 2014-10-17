@@ -1,0 +1,3 @@
+.block
+  - for link in site_config[:links]
+    a.main href="#{link[:url]}" = link[:name]
