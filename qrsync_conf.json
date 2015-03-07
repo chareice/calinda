@@ -1,0 +1,6 @@
+{
+    "src":          "/Users/chareice/git/calinda/build",
+    "dest":         "qiniu:access_key=iIccISIqgg6HhzOSCtsMiEgRWTBDFRtryCPCiWfb&secret_key=6UCsPkrJ3t-3zcXZW3x0BFJQ0UuuDCw2OCAoUbEQ&bucket=chareice",
+    "deletable":    1,
+    "debug_level":  1
+}

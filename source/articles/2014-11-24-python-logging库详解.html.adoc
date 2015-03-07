@@ -1,0 +1,282 @@
+---
+title: Python Logging库详解
+date: 2014-11-24 07:34 UTC
+tags:
+---
+
+:toc: macro
+:toc-title: 本文目录
+
+:numbered:
+
+toc::[]
+
+Python为我们提供了一个`logging`库，我们可以在Python中使用`import logging`直接导入该库。
+
+`logging`为应用程序实现了可扩展的事件记录系统，`logging`的关键点在于可以在各个模块之间共用logging，所以你可以在第三方的库中集成一些自己的事件记录系统。
+
+
+
+== Logging基础
+
+=== 什么时候应该使用logging
+
+logging提供了一系列简单方便的函数来简化日志记录，这些函数包括`debug()`, `info()`,`warning()`, `error()`和`critical()`。要决定应该使用哪一种方式来记录，可以查看下表的说明。
+
+.执行任务的最好日志工具
+|===
+|正在执行的任务 | 该任务的最好日志工具
+
+|一般用途的脚本或者程序，输出日志到命令行上
+|`print()`
+
+|报告程序运行过程中的一般事件(例如程序状态监控)
+|`logging.info()`（或者是`logging.debug()`可以输出很详细的信息，用于诊断可能的错误）
+
+|在特定的运行时事件发生时，发出警告
+|`warnings.warn()`用来记录该警告是可以避免的，并且程序应该做出相应的修改。 +
+`logging.warning()`用来记录程序在该事件发生时，程序什么也不能处理，但是事件必须被记录。
+
+|在特定的运行时报告错误
+|抛出异常
+
+|在不抛出异常的情况下报告一个可以被抑制的错误
+|`logging.error()`, `logging.exception()`或者`logging.critical()`是在该情况下的恰当方法。
+
+|===
+
+这些日志函数都是以他们报告事件的严重级别来结尾的，下面的表格是各个事件级别的说明（表格越后项越严重）
+
+.日志记录级说明
+|===
+|级别 | 什么时候应该使用。
+
+|DEBUG
+|非常详细的信息，通常只在诊断可能的错误时使用。
+
+|INFO
+|确认事情按照期望发生。
+
+|WARNING
+|当一些不期望发生的事件发生的时候的指示器。或者指示一些即将发生的错误，例如磁盘容量低。但是程序还是会按照期望运行。
+
+|ERROR
+|因为一些更加紧急的错误，程序必须采取某些行动。
+
+|CRITICAL
+|严重的错误，标示程序可能无法继续运行。
+
+|===
+
+默认的错误级别是`WARNING`，这意味着只有该级别和更加紧急的错误会被记录，除非程序有另外配置。
+
+被跟踪的错误可以使用不同的方式来掌控，最简单的方式是将错误打印到命令行，还有一种常用的方式是将其记录到磁盘上的文件中。
+
+=== 一个简单的例子
+
+来看一个简单的列子
+
+```python
+import logging
+logging.warning('Watch out!') # 将会在命令行输出
+logging.info('I told you so') # 不会打印任何东西
+```
+
+如果你将这些命令保存到文件中并且运行它，你将会看到如下输出。
+
+```text
+WARNING:root:Watch out!
+```
+
+`INFO`消息没有被打印出来的原因是因为默认的输出级别是`WARNING`。打印出来的日志信息包含了日志级别的指示和logging函数调用中提供的描述信息。输出中的`root`我们在后面会进行解释。输出格式同样会在后面进行解释。
+
+=== 记录到文件中
+
+在实际应用中一个非常常见的场景是将日志信息记录到文件中，我们来试一试。
+
+```python
+import logging
+logging.basicConfig(filename='example.log',level=logging.DEBUG)
+logging.debug('This message should go to the log file')
+logging.info('So should this')
+logging.warning('And this, too')
+```
+
+现在我们打开`example.log`看看里面有什么，我们将会看到以下内容。
+
+```text
+DEBUG:root:This message should go to the log file
+INFO:root:So should this
+WARNING:root:And this, too
+```
+
+在这个例子中我们同样看到了怎么来设置日志等级的一个临界值，我们在这里将日志等级设为了`DEBUG`，所以所有的日志信息都会被记录。
+
+如果你多次运行上面的例子，你会发现每一次的日志都会被追加到以前的日志后面，如果你想覆盖到之前已经记录的内容，可以这么来配置:
+
+```python
+logging.basicConfig(filename='example.log', filemode='w', level=logging.DEBUG)
+```
+
+我们可以在配置中指定文件模式来实现覆盖以前的日志。
+
+=== 从多个不同的模块中记录日志
+
+如果你的程序包含了多个模块，这里有一个例子来介绍你可以怎样组织你的日志记录。
+
+```python
+# myapp.py
+import logging
+import mylib
+
+def main():
+    logging.basicConfig(filename='myapp.log', level=logging.INFO)
+    logging.info('Started')
+    mylib.do_something()
+    logging.info('Finished')
+
+if __name__ == '__main__':
+    main()
+```
+
+```python
+# mylib.py
+import logging
+
+def do_something():
+    logging.info('Doing something')
+```
+
+如果你运行`myapp.py`，可以在`myapp.log`文件中看到如下记录：
+
+```text
+INFO:root:Started
+INFO:root:Doing something
+INFO:root:Finished
+```
+
+正是我们希望的结果。
+
+=== 记录变量值
+
+要记录变量的值，可以在时间记录函数中使用格式化字符串，并且在后面添加要输出的变量值作为参数。例如：
+
+```python
+import logging
+logging.warning('%s before you %s', 'Look', 'leap!')
+```
+
+将会输出
+
+```python
+WARNING:root:Look before you leap!
+```
+
+你可以看到，我们在上面的格式化字符串中使用的是老式的%-风格，这样做是为了向前兼容。新式的应该使用类似`str.format()`和`string.Template`。
+
+=== 改变日志输出格式
+
+要改变日志的输出格式，你必须指定你需要的格式。
+
+```python
+import logging
+logging.basicConfig(format='%(levelname)s:%(message)s', level=logging.DEBUG)
+logging.debug('This message should appear on the console')
+logging.info('So should this')
+logging.warning('And this, too')
+```
+
+将会打印出
+
+```text
+DEBUG:This message should appear on the console
+INFO:So should this
+WARNING:And this, too
+```
+
+我们注意到，在之前的例子中输出的`root`已经消失了。格式中可以使用的信息名称集合你可以在这里找到 https://docs.python.org/2/library/logging.html#logrecord-attributes[日志记录属性]。但是为了使用的简单，你只需要日志的输出级别，信息，进一步的可能还需要日志的输出时间。我们将在下一节讨论输出时间。
+
+=== 在日志信息中显示时间和日期
+
+要在日志信息中显示时间和日期，你需要在日志格式中指定`%(asctime)s`字符串。
+
+```python
+import logging
+logging.basicConfig(format='%(asctime)s %(message)s')
+logging.warning('is when this event was logged.')
+```
+
+将会打印出像下面这样的内容
+
+```text
+2010-12-12 11:41:42,612 is when this event was logged.
+```
+
+默认的日期格式是ISO8601，如果需要自己指定日期／时间的格式，需要在`basicConfig`中提供`datefmt`参数，看下面的例子：
+
+```python
+import logging
+logging.basicConfig(format='%(asctime)s %(message)s', datefmt='%m/%d/%Y %I:%M:%S %p')
+logging.warning('is when this event was logged.')
+```
+
+将会打印出像下面这样的内容
+
+```text
+12/12/2010 11:46:36 AM is when this event was logged.
+```
+
+== Logging高级教程
+
+logging库是模块化的并且提供了一些组件, loggers, handlers, filters, 和 formatters。
+
+* Loggers会为代码直接提供可调用的接口
+* Handlers将loggers生成的日志记录发送到适当的地方
+* Filters提供了一个出色的工具来决定哪些日志将会被输出
+* Formatters为最终的数据结果指定格式
+
+日志事件信息是一个在loggers,handlers,filters和formatters之间传递的一个 https://docs.python.org/2/library/logging.html#logging.LogRecord[LogRecord]对象。
+
+日志记录是通过调用Logger对象的方法来执行的。每个Logger对象都有一个name属性，name属性通过点号来划分命名空间。例如一个叫做'scan'的logger是'scan.text', 'scan.html'和'scan.pdf'的父logger。Logger的name可以改为任何你想要的，并且用来指示程序中你需要的logger对象。
+
+一个非常好的命名风格是使用模块名，在每一个使用logger的模块中，这样来命名：
+
+```python
+logger = logging.getLogger(__name__)
+```
+
+这意味着logger的名称可以被跟踪为 包/模块 的级别，而且可以直观地观察到是哪一个模块输出了该事件。
+
+logger级别的根节点称为`root logger`。logging模块下的 debug(), info(), warning(), error() 和 critical()方法就是在root logger上调用的。root logger的名称在日志中会打印为root。
+
+当然，我们可以把日志记录到不同的地方，包括文件， HTTP GET/POST 地址， SMTP的email, socket或者是系统相关的日志机制例如syslog或者是Windows NT事件记录。日志的目的地是通过handler类来代表的。如果你需要的日志目的地标准库没有提供，你也可以创建一个自己的handler对象。
+
+默认情况下，所有的日志信息都没有设置目的地，你可以在basicConfig()函数调用中指定目的地。如果你调用日志记录函数，他们会检查是否设置了日志目的地，如果没有设置的话，他们会将命令行(sys.stderr)作为他们的记录目的地，并且默认的日志格式会使用root logger的格式。
+
+=== Logging流程图
+
+在loggers和handlers中记录事件信息的流程可以描述为如下的流程图。
+
+image::https://docs.python.org/2/_images/logging_flow.png[logging_flow]
+
+=== Loggers
+
+Logger对象有三个任务，第一，它们为应用程序提供可以调用日志记录函数的接口。第二，Logger对象通过日志级别决定日志信息是否会被记录。第三，Logger对象传递信息给其相关的handler对象。
+
+Logger对象的函数可以分为两类，配置和记录。
+
+有一些是经常使用到的配置函数：
+
+* Logger.setLevel()指定logger的最低日志记录级别。
+* Logger.addHandler() 和 Logger.removeHandler() 为logger添加或者删除handler对象。
+* Logger.addFilter() 和 Logger.removeFilter() 为logger添加或者删除filter对象。
+
+你不需要为每个创建的logger对象执行上面的函数，参考本节的最后两段。
+
+当logger对象配置好了之后，下面的函数用来记录日志信息：
+
+* Logger.debug(), Logger.info(), Logger.warning(), Logger.error(), 和 Logger.critical()，所有的这些函数都会创建日志记录并且将日志级别设置为函数名称对应的级别。日志信息实际上是一个可能包含了标准替换符如 %s, %d, %f的格式化字符串，函数调用的参数和替换符的位置是对应的。关于`**kwargs`，logging函数只关心`exc_info`参数的内容，并且根据这个参数来决定它们期望的信息。
+* Logger.exception() 创建一条类似Logger.error()的记录。不同之处在于Logger.exception()会导出一份错误 stack trace。只在处理异样的时候调用这个函数。
+* Logger.log()函数将日志级别显示得作为一个参数。
+
+getLogger()函数通过其参数返回一个命名的logger对象，如果没有参数的话，就返回root logger。使用同样的参数重复调用该函数会返回同一个对象。
