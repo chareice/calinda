@@ -1,7 +1,7 @@
 ---
 title: 运行Rails测试会发生什么?
 date: 2014-08-21 09:43 UTC
-tags:
+tags: Rails
 ---
 
 ## 运行Rails测试的方法

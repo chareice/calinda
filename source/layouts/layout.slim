@@ -6,8 +6,9 @@ html
   body
     == partial 'partial/describe'
     #container
-      == partial 'partial/links'
+      == partial 'partial/tags', :locals => {:tagname => tagname ||= false}
       .content
         == yield
+      == partial 'partial/links'
     == partial 'partial/footer'
     == partial 'partial/google_analysis'

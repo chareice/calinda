@@ -15,6 +15,8 @@ end
 activate :blog do |blog|
   blog.prefix = "articles"
   blog.layout = "article"
+  blog.taglink = "/tags/{tag}.html"
+  blog.tag_template = 'tags.html'
 end
 
 activate :minify_html

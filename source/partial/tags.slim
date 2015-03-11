@@ -1,0 +1,3 @@
+.block
+  - for tag in blog.tags
+    a class=('main' if(tagname && tag[0] == tagname)) href="#{tag_path(tag[0])}" = tag[0]
