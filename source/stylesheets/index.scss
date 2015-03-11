@@ -147,6 +147,15 @@ footer {
       height: 20px;
       overflow: hidden;
     }
+
+    #load_comments {
+      background: #F7F7F7;
+      color: #8F8F8F;
+      width: 10rem;
+      padding: .1rem;
+      margin: 0 auto;
+      cursor: pointer;
+    }
   }
 }
 
@@ -158,6 +167,16 @@ footer {
   border-style: solid;
   padding: 30px 60px;
   margin: auto;
+  table, th, td{
+    padding: 0.5rem 2rem;
+    border: 1px solid #ccc;
+    text-align: left;
+  }
+  .toc{
+    background: #F7F7F7;
+    padding: 2rem;
+    border-radius: 1rem;
+  }
 }
 
 a, .as-link {

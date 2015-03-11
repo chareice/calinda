@@ -3,7 +3,7 @@ html
   head
     title = "#{current_article.title} - #{site_config[:title]}"
     == partial 'partial/header'
-    = stylesheet_link_tag "#{site_config[:cdn_address]}/highlight/styles/tomorrow-night-eighties.css"
+    = stylesheet_link_tag "//calinda.qiniudn.com/solarized_dark.css"
   body
     == partial 'partial/describe'
     #container
@@ -16,7 +16,7 @@ html
           == yield
       == partial 'partial/disqus'
     == partial 'partial/footer'
-    = javascript_include_tag "#{site_config[:cdn_address]}/highlight/highlight.pack.js"
+    = javascript_include_tag "//calinda.qiniudn.com/highlight.min.js"
     javascript:
       hljs.initHighlightingOnLoad()
     == partial 'partial/google_analysis'
