@@ -1,0 +1,188 @@
+---
+title: Docker Swarm 初体验
+date: 2016-05-24 13:29 UTC
+tags:
+online: true
+---
+
+:toc: macro
+:toc-title: 本文目录
+:toclevels: 1
+:numbered:
+
+toc::[]
+
+https://www.docker.com/products/docker-swarm[Docker Swarm]是Docker官方推出的多机Docker集群工具，它将一组独立的Docker服务抽象为一个单独的虚拟Docker服务，并且这和虚拟的Docker服务可以和几乎所有的Docker客户端兼容。
+
+== Docker Swarm
+
+要安装Docker Swarm，首先得理解swarm的创建方法，要创建 swarm 网络的第一步是拉取Docker Swarm镜像，然后使用Docker来设置swarm manager和所有在swarm中运行的节点。这些方法要求你：
+
+* 在所有节点上打开一个和swarm manager通信的TCP端口
+* 在所有节点上安装Docker
+* 安装和管理TLS证书来保证swarm通信安全
+
+如果是要初次体验swarm，官方推荐使用docker-machine来安装swarm。
+
+=== Docker Machine安装Docker Swarm
+
+安装好docker-machine之后，我们尝试启动三台节点(node)。
+
+==== 打开终端，显示现有的虚拟机列表。
+
+```text
+➜  ~ docker-machine ls
+NAME   ACTIVE   DRIVER         STATE     URL   SWARM
+dev    -        vmwarefusion   Stopped
+```
+==== 创建一台名叫 `manager` 的虚拟机。
+
+```text
+➜  ~ docker-machine create -d virtualbox manager
+Running pre-create checks...
+Creating machine...
+Waiting for machine to be running, this may take a few minutes...
+Machine is running, waiting for SSH to be available...
+Detecting operating system of created instance...
+Provisioning created instance...
+Copying certs to the local machine directory...
+Copying certs to the remote machine...
+Setting Docker configuration on the remote daemon...
+To see how to connect Docker to this machine, run: docker-machine env manager
+```
+
+==== 创建一台虚拟机名叫 `agent1` 。
+
+```
+➜  ~ docker-machine create -d virtualbox agent1
+Running pre-create checks...
+Creating machine...
+Waiting for machine to be running, this may take a few minutes...
+Machine is running, waiting for SSH to be available...
+Detecting operating system of created instance...
+Provisioning created instance...
+Copying certs to the local machine directory...
+Copying certs to the remote machine...
+Setting Docker configuration on the remote daemon...
+To see how to connect Docker to this machine, run: docker-machine env agent1
+```
+
+==== 创建一台虚拟机名叫 `agent2` 。
+
+```
+➜  ~ docker-machine create -d virtualbox agent2
+Running pre-create checks...
+Creating machine...
+Waiting for machine to be running, this may take a few minutes...
+Machine is running, waiting for SSH to be available...
+Detecting operating system of created instance...
+Provisioning created instance...
+Copying certs to the local machine directory...
+Copying certs to the remote machine...
+Setting Docker configuration on the remote daemon...
+To see how to connect Docker to this machine, run: docker-machine env agent2
+```
+
+=== 创建 Swarm discovery token
+
+在这里，我们使用Docker Hub托管的discovery后端来为我们的集群生成一个全球唯一的discovery token。这个discovery后端仅仅用做开发和测试意图，并不是针对生产环境。稍后，当你运行swarm manager和nodes，它们会在discovery后端注册为集群的成员，这个集群正是和刚才获取到的discovery token关联的。discovery后端维护和管理该集群中的成员列表，并和swarm manager共享列表内容， swarm manager使用这个列表来给nodes分配任务。
+
+==== 连接到manager docker engine。
+
+```text
+➜  ~ eval $(docker-machine env manager)
+```
+
+==== 为swarm集群创建唯一id。
+
+由于你懂的原因，这里使用alauda的镜像来替代swarm镜像。
+
+```text
+➜  ~ docker run --rm index.alauda.cn/library/swarm create
+Unable to find image 'index.alauda.cn/library/swarm:latest' locally
+latest: Pulling from library/swarm
+4bdde9413a9d: Pull complete
+281a124ed91f: Pull complete
+d953790d1cd9: Pull complete
+73f6bd4c8155: Pull complete
+4be7977a13c8: Pull complete
+a7afc66291b2: Pull complete
+6abeb218f75c: Pull complete
+9a6aaea664d1: Pull complete
+Digest: sha256:7daa83d26095e5761252cfc0d8cb6f5e04a9443654ed3fc4395cb9ce3709730a
+Status: Downloaded newer image for index.alauda.cn/library/swarm:latest
+e93a2623b23255f245ee82fb9617320e
+```
+
+==== 复制唯一id。
+
+唯一ID就是上一步命令最后一行字付串。
+
+== 创建Swarm manager和nodes
+
+这一步，你将把每一个主机连接起来，并且创建swarm manager和nodes。
+
+=== 查看运行中的虚拟机列表。
+
+```text
+➜  ~ docker-machine ls
+NAME      ACTIVE   DRIVER         STATE     URL                         SWARM
+agent1    -        virtualbox     Running   tcp://192.168.99.101:2376
+agent2    -        virtualbox     Running   tcp://192.168.99.102:2376
+dev       -        vmwarefusion   Stopped
+manager   *        virtualbox     Running   tcp://192.168.99.100:2376
+```
+
+你的Docker客户端还是应当连接到manager节点。使用下面的语法在 `manager` 主机上运行一个功能为primary manager的容器。
+
+```text
+➜  ~ docker run -d -p <你选择的端口号>:3376 -t -v /var/lib/boot2docker:/certs:ro swarm manage -H 0.0.0.0:3376 --tlsverify --tlscacert=/certs/ca.pem --tlscert=/certs/server.pem --tlskey=/certs/server-key.pem token://e93a2623b23255f245ee82fb9617320e
+```
+
+=== 连接到`agent1`。
+
+```text
+➜  ~ eval $(docker-machine env agent1)
+```
+
+=== 在`agent1`主机上运行功能为agent的容器。
+
+```text
+➜  ~ docker run -d index.alauda.cn/library/swarm:latest join --addr=$(docker-machine ip agent1):2376 token://e93a2623b23255f245ee82fb9617320e
+```
+
+=== 连接到`agent2`，重复同样的命令，注意替换IP地址。
+
+== 管理你的Swarm
+
+在这里，你将连接上你创建的集群，查看swarm manager和nodes的信息，通知swarn运行容器然后检查是哪个节点运行了这个容器。
+
+=== 通过修改`DOCKER_HOST`环境变量连接到swarm。
+
+```text
+➜  ~ DOCKER_HOST=<manager_ip>:<你选择的端口号>
+```
+
+=== 查看swarm的信息。
+
+```text
+➜  ~ docker info
+```
+
+在这里我们可以查看到节点相关的信息。官方文档说能看到2个agent和1个master，可是我只看到了2个agent...😓
+
+=== 查看当前运行的容器。
+
+```text
+➜  ~ docker ps
+```
+
+=== 在swarm中运行容器。
+
+```text
+➜  ~ docker run index.alauda.cn/library/hello-world
+```
+
+=== 使用 `docker ps` 查看容器运行在哪个节点上。
+
+默认情况下，Docker Swarm使用'spread'调度策略来运行容器，该策略会选择运行容器数量最少的host来运行容器。

@@ -2,11 +2,12 @@
 title: 运行Rails测试会发生什么?
 date: 2014-08-21 09:43 UTC
 tags: Rails
+online: true
 ---
 
 ## 运行Rails测试的方法
 
-Rails默认的启动测试命令是`rake test:all`。运行这个命令之后，它会将test文件夹或其子目录下所有以`_test.rb`结尾的文件交给Minitest运行。如果你想运行单个的测试文件，那么你需要使用一个亢长的命令`rake test TEST=/test/models/some_model_test.rb`。
+Rails默认的启动测试命令是`rake test:all`。运行这个命令之后，它会将test文件夹或其子目录下所有以`_test.rb`结尾的文件交给Minitest运行。如果你想运行单个的测试文件，那么你需要使用一个亢长的命令`rake test TEST=/test/models/some_model_test.rb`。更进一步，如果要运行单个测试函数，可以`ruby -I"lib:test" test/model/user.rb - test_can_login`。
 
 ## 运行测试之后发生了什么?
 
@@ -23,4 +24,4 @@ Rails默认的启动测试命令是`rake test:all`。运行这个命令之后，
 1. 运行`teardown`块。
 1. 回滚或者删除第一步的fixtures。测试结果会输出到显示器上。
 
-![MiniTest test execution](//dn-chareice.qbox.me/minitest-execution.png)
+![MiniTest test execution](/images/minitest_execution.png)

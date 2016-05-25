@@ -1,0 +1,334 @@
+---
+title: 集合类数据类型的实现
+date: 2015-03-29 13:37 UTC
+tags: Java, 算法
+online: true
+---
+
+:toc: macro
+:toc-title: 本文目录
+
+:numbered:
+
+toc::[]
+
+== 字符串定容栈
+
+定容栈，指的是容量固定的栈。首先，我们来实现一个只能支持字符串类型的定容栈，其API接口如下表：
+
+.FixedCapacityStackOfString API
+[cols="1,2,2"]
+|===
+|返回类型 |方法名 |解释
+
+|
+|FixedCapacityStackOfString(int cap)
+|创建一个大小为cap的空栈
+
+|void
+|push(String item)
+|添加一个字符串
+
+
+|String
+|pop()
+|删除最近添加的字符串
+
+|boolean
+|isEmpty()
+|栈是否为空
+
+|int
+|size()
+|栈中的字符串数量
+
+|===
+
+接口实现
+
+```java
+
+public class FixedCapacityStackOfString{
+  private String[] a;
+  private int N;
+
+  public FixedCapacityStackOfString(int cap){
+    a = new String[cap];
+  }
+
+  public boolean isEmpty(){
+    return N == 0;
+  }
+
+  public int size(){
+    return N;
+  }
+
+  public void push (String item){
+    a[N++] = item;
+  }
+
+  public String pop(){
+    return a[--N];
+  }
+
+  public static void main(String[] args){
+    FixedCapacityStackOfString s;
+
+    s = new FixedCapacityStackOfString(100);
+
+    while(!StdIn.isEmpty()){
+      String item = StdIn.readString();
+      if(!item.equals("-")){
+        s.push(item);
+      }else if(!s.isEmpty()){
+        StdOut.print(s.pop() + " ");
+      }
+    }
+
+    StdOut.println("(" + s.size() + " left on stack)");
+  }
+}
+
+```
+
+`FixedCapacityStackOfString` 的缺点很明显，只能处理字符串类型。接下来我们将其扩展为泛型类。
+
+== 泛型定容栈
+
+.FixedCapacityStack<Item> API
+[cols="1,2,2"]
+|===
+|返回类型 |方法名 |解释
+
+|
+|FixedCapacityStack(int cap)
+|创建一个大小为cap的空栈
+
+|void
+a|push(*Item* item)
+|添加一个字符串
+
+
+a|*Item*
+|pop()
+|删除最近添加的字符串
+
+|boolean
+|isEmpty()
+|栈是否为空
+
+|int
+|size()
+|栈中的元素数量
+
+|===
+
+实现：
+
+```java
+public class FixedCapacityStack<Item>{
+  private Item[] a;
+  private int N;
+
+  public FixedCapacityStack(int cap){
+    a = (Item[]) new Object[cap];
+  }
+
+  public boolean isEmpty(){
+    return N == 0;
+  }
+
+  public int size(){
+    return N;
+  }
+
+  public void push (Item item){
+    a[N++] = item;
+  }
+
+  public Item pop(){
+    return a[--N];
+  }
+
+  public static void main(String[] args){
+    FixedCapacityStack<String> s;
+
+    s = new FixedCapacityStack(100);
+
+    while(!StdIn.isEmpty()){
+      String item = StdIn.readString();
+      if(!item.equals("-")){
+        s.push(item);
+      }else if(!s.isEmpty()){
+        StdOut.print(s.pop() + " ");
+      }
+    }
+
+    StdOut.println("(" + s.size() + " left on stack)");
+  }
+}
+
+```
+
+== 调整栈容量的大小
+
+目前我们两个定容栈的实现都是固定大小的，也就是在栈初始化时，我们已经固定了其大小。
+但是在实际使用中，有些情况下我们是无法预估需要的栈容量大小的，太大了浪费，小了又不够用。
+
+这里我们来实现一种自动调整栈容量大小大方法。我们在push()方法调用时，检查栈是否已满，如果满了，我们就创建一个新的数组，新的数组的容量是原数组的两倍。在调用pop()方法时，我们检查当栈元素数量是否是容量的四分之一，如果是就将创建一个大小为容量一半的数组。
+
+调整数组容量的方法：
+
+```java
+private void resize(int max){
+  Item[] temp = (Item[]) new Object[max];
+  for(int i=0; i< N; i++){
+    temp[i] = a[i];
+  }
+
+  a = temp;
+}
+```
+
+新的push()方法:
+
+```java
+public void push(Item item){
+  if(N == a.length){
+    resize(2*a.length);
+  }
+
+  a[N++] = item;
+}
+```
+
+新的pop()方法:
+
+```java
+public Item pop(){
+  Item item = a[--N];
+  a[N] = null;
+  if(N > 0 && N ==a.length/4){
+    resize(a.length/2);
+  }
+  return item;
+}
+```
+
+== 实现迭代
+
+迭代是指对一组元素实施同样的操作，一个可迭代集合都必须要实现的东西：
+
+* 集合数组类型必须实现一个iterator()方法并且返回一个Iterator对象。
+* Iterator类必须包含两个方法：hasNext()（返回一个布尔值）和 next()（返回集合中的一个元素）。
+
+在Java中，可以使用借口机制来制定一个类所必需实现的方法。要使类可迭代，必需在类的声明中增加 `implements Iterable<Item>`。
+
+Iterable接口要求实现 `iterator()` 方法，该方法返回一个迭代器。
+
+```java
+public interface Iterable<Item>{
+  Iterable<Item> iterator();
+}
+```
+
+栈是先进后出，我们需要逆序遍历数组，因此我们将迭代器命名为：ReverseArrayIterator。
+
+```java
+public Iterator<Item> iterator(){
+  return new ReverseArrayIterator();
+}
+```
+
+迭代器的接口：
+
+```java
+public interface Iterator(){
+  boolean hasNext();
+  Item next();
+  void remove();
+}
+```
+
+对于我们的实现：
+
+```java
+private class ReverseArrayIterator implements Iterator<Item>{
+  private int i = N;
+
+  public boolean hasNext(){
+    return i > N;
+  }
+
+  public Item next(){
+    return a[--i];
+  }
+
+  public void remove(){}
+}
+```
+
+== 可动态调整大小的下压(LIFO)栈实现
+
+```java
+import java.util.Iterator;
+
+public class ResizingArrayStack<Item> implements Iterable<Item>{
+  private Item[] a = (Item[]) new Object[1];;
+  private int N = 0;
+
+  public boolean isEmpty(){
+    return N == 0;
+  }
+
+  public int size(){
+    return N;
+  }
+
+  public void push(Item item){
+    if(N == a.length){
+      resize(2*a.length);
+    }
+
+    a[N++] = item;
+  }
+
+  public Item pop(){
+    Item item = a[--N];
+    a[N] = null;
+    if(N > 0 && N ==a.length/4){
+      resize(a.length/2);
+    }
+    return item;
+  }
+
+  private void resize(int max){
+    Item[] temp = (Item[]) new Object[max];
+    for(int i=0; i< N; i++){
+      temp[i] = a[i];
+    }
+
+    a = temp;
+  }
+
+  public Iterator<Item> iterator(){
+    return new ReverseArrayIterator();
+  }
+
+  private class ReverseArrayIterator implements Iterator<Item>{
+    private int i = N;
+
+    public boolean hasNext(){
+      return i > N;
+    }
+
+    public Item next(){
+      return a[--i];
+    }
+
+    public void remove(){}
+  }
+}
+
+```

@@ -2,6 +2,7 @@
 title: ruby迭代map简便写法的实现原理
 date: 2014-08-22 08:37 UTC
 tags: Ruby
+online: true
 ---
 ##简便方法的用法
 

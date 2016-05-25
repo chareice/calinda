@@ -23,7 +23,7 @@ activate :minify_html
 activate :gzip
 site_config = {
   :title => "Chareice",
-  :description => "Hi, I'm Chareice, A Everything Programmer.",
+  :description => "Hi, I'm Chareice, A Web Developer.",
   :links => [
     {
       :name => "Twitter",
@@ -37,7 +37,7 @@ site_config = {
   :disqus_shortname => "chareice-blog",
   :signoff => "Chareice",
   :date_format => "%d %b %Y",
-  :cdn_address => "//dn-chareice.qbox.me"
+  :cdn_address => "//dn-chareicecnd.qbox.me"
 }
 
 set :site_config, site_config

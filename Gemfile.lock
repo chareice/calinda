@@ -1,5 +1,5 @@
 GEM
-  remote: http://rubygems.org/
+  remote: http://mirrors.aliyun.com/rubygems/
   specs:
     activesupport (4.1.4)
       i18n (~> 0.6, >= 0.6.9)
@@ -130,3 +130,6 @@ DEPENDENCIES
   middleman-gh-pages
   middleman-minify-html
   slim
+
+BUNDLED WITH
+   1.11.2
