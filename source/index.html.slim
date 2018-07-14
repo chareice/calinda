@@ -1,6 +1,5 @@
 ul.posts
   -for article in blog.articles
-    - if article.metadata[:page]['online']
-      li
-        small class="datetime muted" data-time="#{article.date}" = article.date.strftime(site_config[:date_format])
-        a href="#{article.url}" = article.title
+    li
+      small class="datetime muted" data-time="#{article.date}" = article.date.strftime(site_config[:date_format])
+      a href="#{article.url}" = article.title
