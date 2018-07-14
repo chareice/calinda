@@ -1,0 +1,178 @@
+<!DOCTYPE html><html><head><title>集合类数据类型的实现 - Chareice</title><meta charset=UTF-8 /><meta content="width=device-width, initial-scale=1.0, user-scalable=no" name=viewport /><link href="/images/favicon.ico" rel="shortcut icon"/><link href="/stylesheets/index.css" rel=stylesheet /><link href="//dn-chareicecnd.qbox.me/solarized_dark.css" rel=stylesheet /></head><body><header><a href="/" id=go-back-home><img alt=Home height=100 src="/images/blog_logo.png" width=100 /></a><p>Chareice</p><p>Hi, I'm Chareice, A Web Developer.</p></header><div id=container><div class=block><a href="/articles/tags/rabbitmq.html">RabbitMQ</a><a href="/articles/tags/java.html">Java</a><a href="/articles/tags/算法.html">算法</a><a href="/articles/tags/计算机科学基础.html">计算机科学基础</a><a href="/articles/tags/python.html">Python</a><a href="/articles/tags/ruby.html">Ruby</a><a href="/articles/tags/rails.html">Rails</a></div><div class=content><section class=post><header><div class=date>29 Mar 2015</div><h1>集合类数据类型的实现</h1></header><div id=toc class=toc> <div id=toctitle class=title>本文目录</div> <ul class=sectlevel1> <li><a href="#_字符串定容栈">1. 字符串定容栈</a></li> <li><a href="#_泛型定容栈">2. 泛型定容栈</a></li> <li><a href="#_调整栈容量的大小">3. 调整栈容量的大小</a></li> <li><a href="#_实现迭代">4. 实现迭代</a></li> <li><a href="#_可动态调整大小的下压_lifo_栈实现">5. 可动态调整大小的下压(LIFO)栈实现</a></li> </ul> </div> <div class=sect1> <h2 id="_字符串定容栈">1. 字符串定容栈</h2> <div class=sectionbody> <div class=paragraph> <p>定容栈，指的是容量固定的栈。首先，我们来实现一个只能支持字符串类型的定容栈，其API接口如下表：</p> </div> <table class="tableblock frame-all grid-all spread"> <caption class=title>Table 1. FixedCapacityStackOfString API</caption> <colgroup> <col style="width: 20%;"> <col style="width: 40%;"> <col style="width: 40%;"> </colgroup> <thead> <tr> <th class="tableblock halign-left valign-top">返回类型</th> <th class="tableblock halign-left valign-top">方法名</th> <th class="tableblock halign-left valign-top">解释</th> </tr> </thead> <tbody> <tr> <td class="tableblock halign-left valign-top"></td> <td class="tableblock halign-left valign-top"><p class=tableblock>FixedCapacityStackOfString(int cap)</p></td> <td class="tableblock halign-left valign-top"><p class=tableblock>创建一个大小为cap的空栈</p></td> </tr> <tr> <td class="tableblock halign-left valign-top"><p class=tableblock>void</p></td> <td class="tableblock halign-left valign-top"><p class=tableblock>push(String item)</p></td> <td class="tableblock halign-left valign-top"><p class=tableblock>添加一个字符串</p></td> </tr> <tr> <td class="tableblock halign-left valign-top"><p class=tableblock>String</p></td> <td class="tableblock halign-left valign-top"><p class=tableblock>pop()</p></td> <td class="tableblock halign-left valign-top"><p class=tableblock>删除最近添加的字符串</p></td> </tr> <tr> <td class="tableblock halign-left valign-top"><p class=tableblock>boolean</p></td> <td class="tableblock halign-left valign-top"><p class=tableblock>isEmpty()</p></td> <td class="tableblock halign-left valign-top"><p class=tableblock>栈是否为空</p></td> </tr> <tr> <td class="tableblock halign-left valign-top"><p class=tableblock>int</p></td> <td class="tableblock halign-left valign-top"><p class=tableblock>size()</p></td> <td class="tableblock halign-left valign-top"><p class=tableblock>栈中的字符串数量</p></td> </tr> </tbody> </table> <div class=paragraph> <p>接口实现</p> </div> <div class=listingblock> <div class=content> <pre class="CodeRay highlight"><code data-lang="java"><span style="color:#088;font-weight:bold">public</span> <span style="color:#339;font-weight:bold">class</span> <span style="color:#B06;font-weight:bold">FixedCapacityStackOfString</span>{
+  <span style="color:#088;font-weight:bold">private</span> <span style="color:#0a8;font-weight:bold">String</span><span style="color:#339;font-weight:bold">[]</span> a;
+  <span style="color:#088;font-weight:bold">private</span> <span style="color:#339;font-weight:bold">int</span> N;
+
+  <span style="color:#088;font-weight:bold">public</span> FixedCapacityStackOfString(<span style="color:#339;font-weight:bold">int</span> cap){
+    a = <span style="color:#080;font-weight:bold">new</span> <span style="color:#0a8;font-weight:bold">String</span>[cap];
+  }
+
+  <span style="color:#088;font-weight:bold">public</span> <span style="color:#339;font-weight:bold">boolean</span> isEmpty(){
+    <span style="color:#080;font-weight:bold">return</span> N == <span style="color:#00D">0</span>;
+  }
+
+  <span style="color:#088;font-weight:bold">public</span> <span style="color:#339;font-weight:bold">int</span> size(){
+    <span style="color:#080;font-weight:bold">return</span> N;
+  }
+
+  <span style="color:#088;font-weight:bold">public</span> <span style="color:#339;font-weight:bold">void</span> push (<span style="color:#0a8;font-weight:bold">String</span> item){
+    a[N++] = item;
+  }
+
+  <span style="color:#088;font-weight:bold">public</span> <span style="color:#0a8;font-weight:bold">String</span> pop(){
+    <span style="color:#080;font-weight:bold">return</span> a[--N];
+  }
+
+  <span style="color:#088;font-weight:bold">public</span> <span style="color:#088;font-weight:bold">static</span> <span style="color:#339;font-weight:bold">void</span> main(<span style="color:#0a8;font-weight:bold">String</span><span style="color:#339;font-weight:bold">[]</span> args){
+    FixedCapacityStackOfString s;
+
+    s = <span style="color:#080;font-weight:bold">new</span> FixedCapacityStackOfString(<span style="color:#00D">100</span>);
+
+    <span style="color:#080;font-weight:bold">while</span>(!StdIn.isEmpty()){
+      <span style="color:#0a8;font-weight:bold">String</span> item = StdIn.readString();
+      <span style="color:#080;font-weight:bold">if</span>(!item.equals(<span style="background-color:hsla(0,100%,50%,0.05)"><span style="color:#710">&quot;</span><span style="color:#D20">-</span><span style="color:#710">&quot;</span></span>)){
+        s.push(item);
+      }<span style="color:#080;font-weight:bold">else</span> <span style="color:#080;font-weight:bold">if</span>(!s.isEmpty()){
+        StdOut.print(s.pop() + <span style="background-color:hsla(0,100%,50%,0.05)"><span style="color:#710">&quot;</span><span style="color:#D20"> </span><span style="color:#710">&quot;</span></span>);
+      }
+    }
+
+    StdOut.println(<span style="background-color:hsla(0,100%,50%,0.05)"><span style="color:#710">&quot;</span><span style="color:#D20">(</span><span style="color:#710">&quot;</span></span> + s.size() + <span style="background-color:hsla(0,100%,50%,0.05)"><span style="color:#710">&quot;</span><span style="color:#D20"> left on stack)</span><span style="color:#710">&quot;</span></span>);
+  }
+}</code></pre> </div> </div> <div class=paragraph> <p><code>FixedCapacityStackOfString</code> 的缺点很明显，只能处理字符串类型。接下来我们将其扩展为泛型类。</p> </div> </div> </div> <div class=sect1> <h2 id="_泛型定容栈">2. 泛型定容栈</h2> <div class=sectionbody> <table class="tableblock frame-all grid-all spread"> <caption class=title>Table 2. FixedCapacityStack&lt;Item&gt; API</caption> <colgroup> <col style="width: 20%;"> <col style="width: 40%;"> <col style="width: 40%;"> </colgroup> <thead> <tr> <th class="tableblock halign-left valign-top">返回类型</th> <th class="tableblock halign-left valign-top">方法名</th> <th class="tableblock halign-left valign-top">解释</th> </tr> </thead> <tbody> <tr> <td class="tableblock halign-left valign-top"></td> <td class="tableblock halign-left valign-top"><p class=tableblock>FixedCapacityStack(int cap)</p></td> <td class="tableblock halign-left valign-top"><p class=tableblock>创建一个大小为cap的空栈</p></td> </tr> <tr> <td class="tableblock halign-left valign-top"><p class=tableblock>void</p></td> <td class="tableblock halign-left valign-top"><div><div class=paragraph> <p>push(<strong>Item</strong> item)</p> </div></div></td> <td class="tableblock halign-left valign-top"><p class=tableblock>添加一个字符串</p></td> </tr> <tr> <td class="tableblock halign-left valign-top"><div><div class=paragraph> <p><strong>Item</strong></p> </div></div></td> <td class="tableblock halign-left valign-top"><p class=tableblock>pop()</p></td> <td class="tableblock halign-left valign-top"><p class=tableblock>删除最近添加的字符串</p></td> </tr> <tr> <td class="tableblock halign-left valign-top"><p class=tableblock>boolean</p></td> <td class="tableblock halign-left valign-top"><p class=tableblock>isEmpty()</p></td> <td class="tableblock halign-left valign-top"><p class=tableblock>栈是否为空</p></td> </tr> <tr> <td class="tableblock halign-left valign-top"><p class=tableblock>int</p></td> <td class="tableblock halign-left valign-top"><p class=tableblock>size()</p></td> <td class="tableblock halign-left valign-top"><p class=tableblock>栈中的元素数量</p></td> </tr> </tbody> </table> <div class=paragraph> <p>实现：</p> </div> <div class=listingblock> <div class=content> <pre class="CodeRay highlight"><code data-lang="java"><span style="color:#088;font-weight:bold">public</span> <span style="color:#339;font-weight:bold">class</span> <span style="color:#B06;font-weight:bold">FixedCapacityStack</span>&lt;Item&gt;{
+  <span style="color:#088;font-weight:bold">private</span> Item<span style="color:#339;font-weight:bold">[]</span> a;
+  <span style="color:#088;font-weight:bold">private</span> <span style="color:#339;font-weight:bold">int</span> N;
+
+  <span style="color:#088;font-weight:bold">public</span> FixedCapacityStack(<span style="color:#339;font-weight:bold">int</span> cap){
+    a = (Item<span style="color:#339;font-weight:bold">[]</span>) <span style="color:#080;font-weight:bold">new</span> <span style="color:#0a8;font-weight:bold">Object</span>[cap];
+  }
+
+  <span style="color:#088;font-weight:bold">public</span> <span style="color:#339;font-weight:bold">boolean</span> isEmpty(){
+    <span style="color:#080;font-weight:bold">return</span> N == <span style="color:#00D">0</span>;
+  }
+
+  <span style="color:#088;font-weight:bold">public</span> <span style="color:#339;font-weight:bold">int</span> size(){
+    <span style="color:#080;font-weight:bold">return</span> N;
+  }
+
+  <span style="color:#088;font-weight:bold">public</span> <span style="color:#339;font-weight:bold">void</span> push (Item item){
+    a[N++] = item;
+  }
+
+  <span style="color:#088;font-weight:bold">public</span> Item pop(){
+    <span style="color:#080;font-weight:bold">return</span> a[--N];
+  }
+
+  <span style="color:#088;font-weight:bold">public</span> <span style="color:#088;font-weight:bold">static</span> <span style="color:#339;font-weight:bold">void</span> main(<span style="color:#0a8;font-weight:bold">String</span><span style="color:#339;font-weight:bold">[]</span> args){
+    FixedCapacityStack&lt;<span style="color:#0a8;font-weight:bold">String</span>&gt; s;
+
+    s = <span style="color:#080;font-weight:bold">new</span> FixedCapacityStack(<span style="color:#00D">100</span>);
+
+    <span style="color:#080;font-weight:bold">while</span>(!StdIn.isEmpty()){
+      <span style="color:#0a8;font-weight:bold">String</span> item = StdIn.readString();
+      <span style="color:#080;font-weight:bold">if</span>(!item.equals(<span style="background-color:hsla(0,100%,50%,0.05)"><span style="color:#710">&quot;</span><span style="color:#D20">-</span><span style="color:#710">&quot;</span></span>)){
+        s.push(item);
+      }<span style="color:#080;font-weight:bold">else</span> <span style="color:#080;font-weight:bold">if</span>(!s.isEmpty()){
+        StdOut.print(s.pop() + <span style="background-color:hsla(0,100%,50%,0.05)"><span style="color:#710">&quot;</span><span style="color:#D20"> </span><span style="color:#710">&quot;</span></span>);
+      }
+    }
+
+    StdOut.println(<span style="background-color:hsla(0,100%,50%,0.05)"><span style="color:#710">&quot;</span><span style="color:#D20">(</span><span style="color:#710">&quot;</span></span> + s.size() + <span style="background-color:hsla(0,100%,50%,0.05)"><span style="color:#710">&quot;</span><span style="color:#D20"> left on stack)</span><span style="color:#710">&quot;</span></span>);
+  }
+}</code></pre> </div> </div> </div> </div> <div class=sect1> <h2 id="_调整栈容量的大小">3. 调整栈容量的大小</h2> <div class=sectionbody> <div class=paragraph> <p>目前我们两个定容栈的实现都是固定大小的，也就是在栈初始化时，我们已经固定了其大小。 但是在实际使用中，有些情况下我们是无法预估需要的栈容量大小的，太大了浪费，小了又不够用。</p> </div> <div class=paragraph> <p>这里我们来实现一种自动调整栈容量大小大方法。我们在push()方法调用时，检查栈是否已满，如果满了，我们就创建一个新的数组，新的数组的容量是原数组的两倍。在调用pop()方法时，我们检查当栈元素数量是否是容量的四分之一，如果是就将创建一个大小为容量一半的数组。</p> </div> <div class=paragraph> <p>调整数组容量的方法：</p> </div> <div class=listingblock> <div class=content> <pre class="CodeRay highlight"><code data-lang="java"><span style="color:#088;font-weight:bold">private</span> <span style="color:#339;font-weight:bold">void</span> resize(<span style="color:#339;font-weight:bold">int</span> max){
+  Item<span style="color:#339;font-weight:bold">[]</span> temp = (Item<span style="color:#339;font-weight:bold">[]</span>) <span style="color:#080;font-weight:bold">new</span> <span style="color:#0a8;font-weight:bold">Object</span>[max];
+  <span style="color:#080;font-weight:bold">for</span>(<span style="color:#339;font-weight:bold">int</span> i=<span style="color:#00D">0</span>; i&lt; N; i++){
+    temp[i] = a[i];
+  }
+
+  a = temp;
+}</code></pre> </div> </div> <div class=paragraph> <p>新的push()方法:</p> </div> <div class=listingblock> <div class=content> <pre class="CodeRay highlight"><code data-lang="java"><span style="color:#088;font-weight:bold">public</span> <span style="color:#339;font-weight:bold">void</span> push(Item item){
+  <span style="color:#080;font-weight:bold">if</span>(N == a.length){
+    resize(<span style="color:#00D">2</span>*a.length);
+  }
+
+  a[N++] = item;
+}</code></pre> </div> </div> <div class=paragraph> <p>新的pop()方法:</p> </div> <div class=listingblock> <div class=content> <pre class="CodeRay highlight"><code data-lang="java"><span style="color:#088;font-weight:bold">public</span> Item pop(){
+  Item item = a[--N];
+  a[N] = <span style="color:#069">null</span>;
+  <span style="color:#080;font-weight:bold">if</span>(N &gt; <span style="color:#00D">0</span> &amp;&amp; N ==a.length/<span style="color:#00D">4</span>){
+    resize(a.length/<span style="color:#00D">2</span>);
+  }
+  <span style="color:#080;font-weight:bold">return</span> item;
+}</code></pre> </div> </div> </div> </div> <div class=sect1> <h2 id="_实现迭代">4. 实现迭代</h2> <div class=sectionbody> <div class=paragraph> <p>迭代是指对一组元素实施同样的操作，一个可迭代集合都必须要实现的东西：</p> </div> <div class=ulist> <ul> <li> <p>集合数组类型必须实现一个iterator()方法并且返回一个Iterator对象。</p> </li> <li> <p>Iterator类必须包含两个方法：hasNext()（返回一个布尔值）和 next()（返回集合中的一个元素）。</p> </li> </ul> </div> <div class=paragraph> <p>在Java中，可以使用借口机制来制定一个类所必需实现的方法。要使类可迭代，必需在类的声明中增加 <code>implements Iterable&lt;Item&gt;</code>。</p> </div> <div class=paragraph> <p>Iterable接口要求实现 <code>iterator()</code> 方法，该方法返回一个迭代器。</p> </div> <div class=listingblock> <div class=content> <pre class="CodeRay highlight"><code data-lang="java"><span style="color:#088;font-weight:bold">public</span> <span style="color:#339;font-weight:bold">interface</span> <span style="color:#B06;font-weight:bold">Iterable</span>&lt;Item&gt;{
+  <span style="color:#0a8;font-weight:bold">Iterable</span>&lt;Item&gt; iterator();
+}</code></pre> </div> </div> <div class=paragraph> <p>栈是先进后出，我们需要逆序遍历数组，因此我们将迭代器命名为：ReverseArrayIterator。</p> </div> <div class=listingblock> <div class=content> <pre class="CodeRay highlight"><code data-lang="java"><span style="color:#088;font-weight:bold">public</span> <span style="color:#0a8;font-weight:bold">Iterator</span>&lt;Item&gt; iterator(){
+  <span style="color:#080;font-weight:bold">return</span> <span style="color:#080;font-weight:bold">new</span> ReverseArrayIterator();
+}</code></pre> </div> </div> <div class=paragraph> <p>迭代器的接口：</p> </div> <div class=listingblock> <div class=content> <pre class="CodeRay highlight"><code data-lang="java"><span style="color:#088;font-weight:bold">public</span> <span style="color:#339;font-weight:bold">interface</span> <span style="color:#B06;font-weight:bold">Iterator</span>(){
+  <span style="color:#339;font-weight:bold">boolean</span> hasNext();
+  Item next();
+  <span style="color:#339;font-weight:bold">void</span> remove();
+}</code></pre> </div> </div> <div class=paragraph> <p>对于我们的实现：</p> </div> <div class=listingblock> <div class=content> <pre class="CodeRay highlight"><code data-lang="java"><span style="color:#088;font-weight:bold">private</span> <span style="color:#339;font-weight:bold">class</span> <span style="color:#B06;font-weight:bold">ReverseArrayIterator</span> <span style="color:#088;font-weight:bold">implements</span> <span style="color:#0a8;font-weight:bold">Iterator</span>&lt;Item&gt;{
+  <span style="color:#088;font-weight:bold">private</span> <span style="color:#339;font-weight:bold">int</span> i = N;
+
+  <span style="color:#088;font-weight:bold">public</span> <span style="color:#339;font-weight:bold">boolean</span> hasNext(){
+    <span style="color:#080;font-weight:bold">return</span> i &gt; N;
+  }
+
+  <span style="color:#088;font-weight:bold">public</span> Item next(){
+    <span style="color:#080;font-weight:bold">return</span> a[--i];
+  }
+
+  <span style="color:#088;font-weight:bold">public</span> <span style="color:#339;font-weight:bold">void</span> remove(){}
+}</code></pre> </div> </div> </div> </div> <div class=sect1> <h2 id="_可动态调整大小的下压_lifo_栈实现">5. 可动态调整大小的下压(LIFO)栈实现</h2> <div class=sectionbody> <div class=listingblock> <div class=content> <pre class="CodeRay highlight"><code data-lang="java"><span style="color:#080;font-weight:bold">import</span> <span style="color:#B44;font-weight:bold">java.util.Iterator</span>;
+
+<span style="color:#088;font-weight:bold">public</span> <span style="color:#339;font-weight:bold">class</span> <span style="color:#B06;font-weight:bold">ResizingArrayStack</span>&lt;Item&gt; <span style="color:#088;font-weight:bold">implements</span> <span style="color:#0a8;font-weight:bold">Iterable</span>&lt;Item&gt;{
+  <span style="color:#088;font-weight:bold">private</span> Item<span style="color:#339;font-weight:bold">[]</span> a = (Item<span style="color:#339;font-weight:bold">[]</span>) <span style="color:#080;font-weight:bold">new</span> <span style="color:#0a8;font-weight:bold">Object</span>[<span style="color:#00D">1</span>];;
+  <span style="color:#088;font-weight:bold">private</span> <span style="color:#339;font-weight:bold">int</span> N = <span style="color:#00D">0</span>;
+
+  <span style="color:#088;font-weight:bold">public</span> <span style="color:#339;font-weight:bold">boolean</span> isEmpty(){
+    <span style="color:#080;font-weight:bold">return</span> N == <span style="color:#00D">0</span>;
+  }
+
+  <span style="color:#088;font-weight:bold">public</span> <span style="color:#339;font-weight:bold">int</span> size(){
+    <span style="color:#080;font-weight:bold">return</span> N;
+  }
+
+  <span style="color:#088;font-weight:bold">public</span> <span style="color:#339;font-weight:bold">void</span> push(Item item){
+    <span style="color:#080;font-weight:bold">if</span>(N == a.length){
+      resize(<span style="color:#00D">2</span>*a.length);
+    }
+
+    a[N++] = item;
+  }
+
+  <span style="color:#088;font-weight:bold">public</span> Item pop(){
+    Item item = a[--N];
+    a[N] = <span style="color:#069">null</span>;
+    <span style="color:#080;font-weight:bold">if</span>(N &gt; <span style="color:#00D">0</span> &amp;&amp; N ==a.length/<span style="color:#00D">4</span>){
+      resize(a.length/<span style="color:#00D">2</span>);
+    }
+    <span style="color:#080;font-weight:bold">return</span> item;
+  }
+
+  <span style="color:#088;font-weight:bold">private</span> <span style="color:#339;font-weight:bold">void</span> resize(<span style="color:#339;font-weight:bold">int</span> max){
+    Item<span style="color:#339;font-weight:bold">[]</span> temp = (Item<span style="color:#339;font-weight:bold">[]</span>) <span style="color:#080;font-weight:bold">new</span> <span style="color:#0a8;font-weight:bold">Object</span>[max];
+    <span style="color:#080;font-weight:bold">for</span>(<span style="color:#339;font-weight:bold">int</span> i=<span style="color:#00D">0</span>; i&lt; N; i++){
+      temp[i] = a[i];
+    }
+
+    a = temp;
+  }
+
+  <span style="color:#088;font-weight:bold">public</span> <span style="color:#0a8;font-weight:bold">Iterator</span>&lt;Item&gt; iterator(){
+    <span style="color:#080;font-weight:bold">return</span> <span style="color:#080;font-weight:bold">new</span> ReverseArrayIterator();
+  }
+
+  <span style="color:#088;font-weight:bold">private</span> <span style="color:#339;font-weight:bold">class</span> <span style="color:#B06;font-weight:bold">ReverseArrayIterator</span> <span style="color:#088;font-weight:bold">implements</span> <span style="color:#0a8;font-weight:bold">Iterator</span>&lt;Item&gt;{
+    <span style="color:#088;font-weight:bold">private</span> <span style="color:#339;font-weight:bold">int</span> i = N;
+
+    <span style="color:#088;font-weight:bold">public</span> <span style="color:#339;font-weight:bold">boolean</span> hasNext(){
+      <span style="color:#080;font-weight:bold">return</span> i &gt; N;
+    }
+
+    <span style="color:#088;font-weight:bold">public</span> Item next(){
+      <span style="color:#080;font-weight:bold">return</span> a[--i];
+    }
+
+    <span style="color:#088;font-weight:bold">public</span> <span style="color:#339;font-weight:bold">void</span> remove(){}
+  }
+}</code></pre> </div> </div> </div> </div></section></div><div class=block> <div id=disqus_thread></div> <div id=load_comments>Load Comments</div> </div> </div><footer><span class=muted>© Chareice. All Rights Reserved.</span><br/><span class=muted>This work is licensed under a <a href="//creativecommons.org/licenses/by-nc-sa/3.0/deed.zh">CC BY-NC-SA 3.0.</a></span><br/><span class=muted>赣ICP备14009574号-3</span></footer><script src="/javascripts/all.js"></script><script src="//dn-chareicecnd.qbox.me/highlight.min.js"></script><script>hljs.initHighlightingOnLoad()</script><script>(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)})(window,document,'script','//www.google-analytics.com/analytics.js','ga');ga('create','UA-39536235-1','auto');ga('send','pageview');</script> </body></html>
